@@ -1,25 +1,329 @@
 .homepage {
-  width: 100%;
-  height: 100vh;
-  background-color: white;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  padding: 0;
+}
+
+.homepage-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px;
+}
+
+/* Hero Section */
+.hero-section {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #64748b;
+  margin-top: 12px;
+}
+
+.hero-description {
+  font-size: 1.2rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 24px 0 0 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Upload Section - Now Intro Section */
+.upload-section {
+  margin-bottom: 80px;
   display: flex;
   justify-content: center;
-  align-items: center;
 }
 
-.homepage-content {
+.intro-section {
+  max-width: 1000px;
+  width: 100%;
   text-align: center;
-  padding: 20px;
 }
 
-.homepage-content h1 {
-  font-size: 2.5rem;
-  color: #333;
-  margin-bottom: 1rem;
+.intro-section h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 48px;
+  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.homepage-content p {
-  font-size: 1.2rem;
-  color: #666;
+.steps-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: nowrap;
+}
+
+.step-item {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  flex: 1;
+  max-width: 300px;
+  min-width: 220px;
+}
+
+.step-item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(124, 58, 237, 0.15);
+}
+
+.step-icon {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 4px 8px rgba(124, 58, 237, 0.2));
+}
+
+.step-item h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.step-item p {
+  color: #64748b;
+  line-height: 1.6;
   margin: 0;
+  font-size: 1rem;
+}
+
+.step-arrow {
+  font-size: 2rem;
+  color: #8b5cf6;
+  font-weight: bold;
+  margin: 0 15px;
+  flex-shrink: 0;
+}
+
+/* Responsive for steps */
+@media (max-width: 1024px) {
+  .steps-container {
+    gap: 20px;
+  }
+  
+  .step-item {
+    min-width: 200px;
+    padding: 30px 20px;
+  }
+  
+  .step-arrow {
+    margin: 0 10px;
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .steps-container {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .step-arrow {
+    transform: rotate(90deg);
+    margin: 10px 0;
+  }
+  
+  .step-item {
+    max-width: 100%;
+    min-width: auto;
+  }
+  
+  .intro-section h2 {
+    font-size: 1.8rem;
+  }
+}
+
+/* Features Section */
+.features-section {
+  text-align: center;
+}
+
+.features-section h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 48px;
+  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background: white;
+  padding: 40px 24px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #f1f5f9;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.feature-card p {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Dark Theme Styles for Homepage */
+body.dark-theme .homepage {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+body.dark-theme .hero-title {
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.dark-theme .hero-subtitle {
+  color: #9ca3af;
+}
+
+body.dark-theme .hero-description {
+  color: #9ca3af;
+}
+
+body.dark-theme .process-steps {
+  background: #1f1f1f;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .process-step {
+  background: #262626;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-theme .process-step:hover {
+  background: #2d2d2d;
+  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.2);
+}
+
+body.dark-theme .step-number {
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+}
+
+body.dark-theme .step-title {
+  color: #f9fafb;
+}
+
+body.dark-theme .step-description {
+  color: #d1d5db;
+}
+
+body.dark-theme .step-arrow {
+  color: #6b7280;
+}
+
+body.dark-theme .features-section h2 {
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.dark-theme .feature-card {
+  background: #1f1f1f;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-theme .feature-card:hover {
+  background: #262626;
+  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.2);
+}
+
+body.dark-theme .feature-title {
+  color: #f9fafb;
+}
+
+body.dark-theme .feature-description {
+  color: #d1d5db;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .homepage-container {
+    padding: 20px;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .hero-description {
+    font-size: 1rem;
+  }
+  
+  .upload-area {
+    padding: 40px 20px;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .features-section h2 {
+    font-size: 2rem;
+  }
 }
