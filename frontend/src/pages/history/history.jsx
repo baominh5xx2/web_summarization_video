@@ -1,80 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import './history.css';
+import historyService from '../../services/history';
 
 function History() {
-  const [historyData, setHistoryData] = useState([]);  const [searchTerm, setSearchTerm] = useState('');
+  const [historyData, setHistoryData] = useState([]);
+  const [summaryVideos, setSummaryVideos] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  // Sample history data - In real app, this would come from API/local storage
+  const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // Load history data and summary videos
   useEffect(() => {
-    const sampleHistory = [
-      {
-        id: 1,
-        fileName: 'Introduction_to_AI.mp4',
-        uploadDate: '2024-01-15T10:30:00Z',
-        duration: '8:45',
-        fileSize: '156.2 MB',
-        videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4', // Sample video URL
-        summary: 'Video này giới thiệu về trí tuệ nhân tạo, các ứng dụng trong đời sống và xu hướng phát triển tương lai.',
-        keyPoints: [
-          'Khái niệm cơ bản về AI',
-          'Ứng dụng trong y tế và giáo dục',
-          'Machine Learning và Deep Learning',
-          'Xu hướng phát triển trong tương lai'
-        ],
-        confidence: '94%'
-      },
-      {
-        id: 2,
-        fileName: 'React_Tutorial_Advanced.mp4',
-        uploadDate: '2024-01-14T15:20:00Z',
-        duration: '12:30',
-        fileSize: '287.5 MB',
-        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4', // Sample video URL
-        summary: 'Hướng dẫn nâng cao về React, bao gồm hooks, context API, và các pattern phổ biến.',
-        keyPoints: [
-          'Custom hooks và useEffect',
-          'Context API và state management',
-          'Performance optimization',
-          'Testing với React Testing Library'
-        ],
-        confidence: '91%'
-      },
-      {
-        id: 3,
-        fileName: 'Web_Development_Basics.mp4',
-        uploadDate: '2024-01-11T11:30:00Z',
-        duration: '25:40',
-        fileSize: '523.8 MB',
-        videoUrl: 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4', // Sample video URL
-        summary: 'Khóa học cơ bản về phát triển web, từ HTML/CSS đến JavaScript và các framework hiện đại.',
-        keyPoints: [
-          'HTML semantics và accessibility',
-          'CSS Grid và Flexbox',
-          'JavaScript ES6+ features',
-          'Introduction to React và Vue'
-        ],
-        confidence: '89%'
-      },
-      {
-        id: 4,
-        fileName: 'Python_Data_Science.mp4',
-        uploadDate: '2024-01-10T09:15:00Z',
-        duration: '18:22',
-        fileSize: '342.8 MB',
-        videoUrl: 'https://www.w3schools.com/html/movie.mp4', // Sample video URL
-        summary: 'Giới thiệu về Data Science với Python, pandas, numpy và các thư viện machine learning.',
-        keyPoints: [
-          'Pandas cho data manipulation',
-          'Numpy cho numerical computing',
-          'Matplotlib và Seaborn cho visualization',
-          'Scikit-learn cho machine learning'
-        ],
-        confidence: '92%'
-      }
-    ];
-
-    setHistoryData(sampleHistory);
+    loadHistoryData();
+    loadSummaryVideos();
+    
+    // Cleanup blob URLs when component unmounts
+    return () => {
+      summaryVideos.forEach(video => {
+        if (video.videoUrl && video.videoUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(video.videoUrl);
+        }
+      });
+    };
   }, []);
+
+  const loadHistoryData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Loading history data...');
+      const response = await historyService.getVideoHistory();
+      
+      console.log('History data loaded:', response);
+      setHistoryData(response.videos || []);
+      
+    } catch (error) {
+      console.error('Error loading history:', error);
+      setError('Không thể tải dữ liệu lịch sử: ' + error.message);    } finally {
+      setLoading(false);
+    }
+  };
+  const loadSummaryVideos = async () => {
+    try {
+      setSummaryLoading(true);
+      
+      const response = await historyService.getLatestVideosFromSummaryOut();
+      
+      setSummaryVideos(response.videos || []);
+      
+    } catch (error) {
+      console.error('❌ Error loading summary videos:', error);
+      // Không hiển thị error, chỉ để array rỗng
+      setSummaryVideos([]);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   // Filter and sort functions
   const filteredData = historyData.filter(item => {
     const matchesSearch = item.fileName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -90,29 +74,40 @@ function History() {
       case 'name':
         return a.fileName.localeCompare(b.fileName);
       case 'size':
-        return parseFloat(b.fileSize) - parseFloat(a.fileSize);
+        // Parse file size string to number for comparison
+        const aSizeValue = parseFloat(a.fileSize.replace(/[^\d.]/g, ''));
+        const bSizeValue = parseFloat(b.fileSize.replace(/[^\d.]/g, ''));
+        return bSizeValue - aSizeValue;
       default:
         return 0;
     }
   });
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return historyService.formatDate(dateString);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa video này khỏi lịch sử?')) {
-      setHistoryData(prev => prev.filter(item => item.id !== id));
+      try {
+        await historyService.deleteVideo(id);
+        // Reload data after successful deletion
+        await loadHistoryData();
+      } catch (error) {
+        console.error('Error deleting video:', error);
+        alert('Không thể xóa video: ' + error.message);
+      }
     }
   };
 
-  return (
+  const handleDownload = async (item) => {
+    try {
+      await historyService.downloadVideo(item.videoUrl, item.fileName);
+    } catch (error) {
+      console.error('Error downloading video:', error);
+      alert('Không thể tải video: ' + error.message);
+    }
+  };  return (
     <div className="history-page">
       <div className="history-container">
         {/* Header */}
@@ -121,88 +116,83 @@ function History() {
           <p>Quản lý và xem lại các video đã được AI xử lý</p>
         </div>
 
-        {/* Controls */}
-        <div className="history-controls">
-          <div className="history-stats">
-          <div className="stat-card">
-            <div className="stat-icon">📊</div>
-            <div className="stat-info">
-              <span className="stat-number">{sortedData.length}</span>
-              <span className="stat-label">Tổng video</span>
-            </div>
-          </div>
-        </div>
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="🔍 Tìm kiếm theo tên file..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-            <div className="filter-sort-controls">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="sort-select"
-            >
-              <option value="newest">Mới nhất</option>
-              <option value="oldest">Cũ nhất</option>
-              <option value="name">Tên A-Z</option>
-              <option value="size">Kích thước</option>
-            </select>
-          </div>
-               {/* Stats */}
-        
-        </div>
-        {/* History List */}
-        <div className="history-list">
-          {sortedData.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>Không tìm thấy kết quả</h3>
-              <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
-            </div>
-          ) : (            sortedData.map((item) => (
-              <div key={item.id} className="history-item">
-                <div className="item-header">
-                  <div className="item-info">
-                    <h3 className="file-name">{item.fileName}</h3>
-                    <div className="item-meta">
-                      <span className="upload-date">📅 {formatDate(item.uploadDate)}</span>
-                      <span className="duration">⏱️ {item.duration}</span>
-                      <span className="file-size">💾 {item.fileSize}</span>
-                      <span className="confidence">🎯 {item.confidence}</span>
+        {/* Summary Videos Section */}
+        {!summaryLoading && summaryVideos.length > 0 && (
+          <div className="summary-section" style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            color: 'white'
+          }}>
+            <div className="summary-header" style={{ marginBottom: '20px' }}>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '1.5rem' }}>🎬 Video Summary Mới Nhất</h2>
+              <p style={{ margin: 0, opacity: 0.9 }}>Có {summaryVideos.length} video được tóm tắt gần đây</p>
+            </div>            <div className="summary-videos-list" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>              {summaryVideos.map((video, index) => (
+                <div key={`${video.id}-${index}`} className="summary-video-card" style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  gap: '16px',
+                  alignItems: 'flex-start'
+                }}>
+                  <div style={{ flex: '0 0 320px' }}>
+                    <video
+                      key={`video-${video.id}-${index}`}
+                      controls
+                      style={{
+                        width: '100%',
+                        borderRadius: '8px',
+                        background: '#000',
+                        maxHeight: '180px'
+                      }}
+                      src={video.videoUrl}
+                      onLoadStart={() => {
+                        console.log(`🎥 Video ${index + 1} load started:`, video.videoUrl.substring(0, 50) + '...');
+                      }}
+                      onLoadedData={() => {
+                        console.log(`✅ Video ${index + 1} data loaded:`, video.fileName);
+                      }}
+                      onError={(e) => {
+                        console.error(`❌ Video ${index + 1} load error:`, e, 'URL:', video.videoUrl.substring(0, 50) + '...');
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
+                    >
+                      Video không thể phát
+                    </video>
+                    <div style={{
+                      display: 'none',
+                      textAlign: 'center',
+                      padding: '20px',
+                      background: 'rgba(0,0,0,0.5)',
+                      borderRadius: '8px',
+                      marginTop: '8px',
+                      fontSize: '0.9rem'
+                    }}>
+                      ❌ Video không thể phát
                     </div>
                   </div>
-                  
-                  <div className="item-actions">
-                    <button className="download-btn" title="Tải xuống">
-                      💾
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="delete-btn"
-                      title="Xóa"
-                    >
-                      🗑️
-                    </button>
+                  <div className="video-info" style={{ flex: 1 }}>
+                    <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>{video.fileName}</h4>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.9, lineHeight: '1.6' }}>
+                      <div style={{ marginBottom: '4px' }}>📅 {historyService.formatDate(video.uploadDate)}</div>
+                      <div style={{ marginBottom: '4px' }}>📁 {video.fileSize}</div>
+                      <div style={{ marginBottom: '4px' }}>🤖 {video.confidence}</div>
+                      <div style={{ marginBottom: '4px' }}>⏱️ {video.duration}</div>
+                    </div>
                   </div>
-                </div>                {/* Video Player */}
-                <div className="video-section">                  <video 
-                    controls 
-                    className="video-player"
-                    poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQwIiBoZWlnaHQ9IjM2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjN2MzYWVkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5WaWRlbyBQbGFjZWhvbGRlcjwvdGV4dD48L3N2Zz4="
-                  >
-                    <source src={item.videoUrl} type="video/mp4" />
-                    Trình duyệt của bạn không hỗ trợ video player.
-                  </video>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))}
+            </div>
+          </div>        )}
       </div>
     </div>
   );

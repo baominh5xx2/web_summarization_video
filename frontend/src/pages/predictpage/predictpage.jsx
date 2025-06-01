@@ -227,26 +227,6 @@ function PredictPage() {
                 Chọn Video
               </button>
             </div>
-            
-            {/* Test Button for debugging */}
-            <div className="test-section" style={{ marginTop: '20px', textAlign: 'center' }}>
-              <button 
-                className="test-btn" 
-                onClick={handleTestVideo}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer'
-                }}
-              >
-                🧪 Test Video Playback
-              </button>
-              <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                Use this to test video playback with existing summary videos
-              </p>            </div>
           </div>
         )}
 

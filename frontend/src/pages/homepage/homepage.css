@@ -1,6 +1,15 @@
+/* Global emoji animation disable */
+.step-icon,
+.step-icon *,
+.homepage .step-icon {
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
 .homepage {
   min-height: 100vh;
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
   padding: 0;
 }
 
@@ -24,7 +33,7 @@
 .hero-title {
   font-size: 3.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -36,13 +45,13 @@
   display: block;
   font-size: 1.5rem;
   font-weight: 400;
-  color: #64748b;
+  color: #475569;
   margin-top: 12px;
 }
 
 .hero-description {
   font-size: 1.2rem;
-  color: #64748b;
+  color: #475569;
   line-height: 1.6;
   margin: 24px 0 0 0;
   max-width: 600px;
@@ -68,7 +77,7 @@
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 48px;
-  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -86,22 +95,26 @@
   background: white;
   padding: 40px 30px;
   border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px rgba(30, 64, 175, 0.08);
   transition: all 0.3s ease;
   flex: 1;
   max-width: 300px;
   min-width: 220px;
+  border: 1px solid #e2e8f0;
 }
 
 .step-item:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
 }
 
 .step-icon {
   font-size: 3.5rem;
   margin-bottom: 20px;
-  filter: drop-shadow(0 4px 8px rgba(124, 58, 237, 0.2));
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
 }
 
 .step-item h3 {
@@ -112,7 +125,7 @@
 }
 
 .step-item p {
-  color: #64748b;
+  color: #475569;
   line-height: 1.6;
   margin: 0;
   font-size: 1rem;
@@ -120,7 +133,7 @@
 
 .step-arrow {
   font-size: 2rem;
-  color: #8b5cf6;
+  color: #3b82f6;
   font-weight: bold;
   margin: 0 15px;
   flex-shrink: 0;
@@ -174,7 +187,7 @@
   font-weight: 700;
   color: #1e293b;
   margin-bottom: 48px;
-  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -192,14 +205,14 @@
   background: white;
   padding: 40px 24px;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px rgba(30, 64, 175, 0.08);
   transition: all 0.3s ease;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e2e8f0;
 }
 
 .feature-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.12);
 }
 
 .feature-icon {
@@ -215,85 +228,116 @@
 }
 
 .feature-card p {
-  color: #64748b;
+  color: #475569;
   line-height: 1.6;
   margin: 0;
 }
 
 /* Dark Theme Styles for Homepage */
 body.dark-theme .homepage {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a1a1a 100%);
 }
 
 body.dark-theme .hero-title {
-  background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 body.dark-theme .hero-subtitle {
-  color: #9ca3af;
+  color: #a1a1aa;
 }
 
 body.dark-theme .hero-description {
-  color: #9ca3af;
+  color: #a1a1aa;
 }
 
 body.dark-theme .process-steps {
-  background: #1f1f1f;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  background: #0a0a0a;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
 body.dark-theme .process-step {
-  background: #262626;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: #111111;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 body.dark-theme .process-step:hover {
-  background: #2d2d2d;
-  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.2);
+  background: #1a1a1a;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
 }
 
 body.dark-theme .step-number {
-  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
 }
 
 body.dark-theme .step-title {
-  color: #f9fafb;
+  color: #f1f5f9;
 }
 
 body.dark-theme .step-description {
-  color: #d1d5db;
+  color: #cbd5e1;
 }
 
 body.dark-theme .step-arrow {
-  color: #6b7280;
+  color: #94a3b8;
+}
+
+body.dark-theme .step-item {
+  background: #111111;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a2a2a;
+}
+
+body.dark-theme .step-item:hover {
+  background: #1a1a1a;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+body.dark-theme .step-item h3 {
+  color: #f8fafc;
+}
+
+body.dark-theme .step-item p {
+  color: #cbd5e1;
+}
+
+body.dark-theme .step-icon {
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
+}
+
+body.dark-theme .intro-section h2 {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 body.dark-theme .features-section h2 {
-  background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 body.dark-theme .feature-card {
-  background: #1f1f1f;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: #0f0f0f;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a2a2a;
 }
 
 body.dark-theme .feature-card:hover {
-  background: #262626;
-  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.2);
+  background: #1a1a1a;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
 }
 
 body.dark-theme .feature-title {
-  color: #f9fafb;
+  color: #f8fafc;
 }
 
 body.dark-theme .feature-description {
-  color: #d1d5db;
+  color: #a1a1aa;
 }
 
 /* Responsive Design */
