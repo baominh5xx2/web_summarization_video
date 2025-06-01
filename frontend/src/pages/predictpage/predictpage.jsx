@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import './predictpage.css';
 import PredictionModal from '../../components/modal/prediction_modal';
+import videoSummarizationService from '../../services/predictvideo';
 
 function PredictPage() {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [result, setResult] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -27,51 +30,89 @@ function PredictPage() {
       handleFileSelect(e.dataTransfer.files[0]);
     }
   };
-
   const handleFileSelect = (file) => {
-    // Kiểm tra định dạng file
-    const validTypes = ['video/mp4'];
-    if (!validTypes.includes(file.type)) {
-      alert('Vui lòng chọn file video hợp lệ (MP4, AVI, MOV)');
-      return;
-    }
+    // Validate file using service
+    const validation = videoSummarizationService.validateVideoFile(file);
     
-    // Kiểm tra kích thước file (100MB)
-    if (file.size > 100 * 1024 * 1024) {
-      alert('File quá lớn. Vui lòng chọn file nhỏ hơn 100MB');
+    if (!validation.isValid) {
+      alert(validation.errors.join('\n'));
       return;
     }
     
     setSelectedFile(file);
     setResult(null);
+    setError(null);
   };
 
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files[0]) {
       handleFileSelect(e.target.files[0]);
     }
-  };
-  const handleProcessVideo = async () => {
+  };  const handleProcessVideo = async () => {
     if (!selectedFile) return;
     
+    setIsProcessing(true);
+    setError(null);
     setShowModal(true);
-  };
-  const handleModalComplete = (modalResult) => {
-    setResult({
-      title: "Tóm tắt video: " + selectedFile.name,
-      duration: "2:45",
-      confidence: "95%",
-      videoUrl: modalResult.videoUrl
-    });
+    
+    try {
+      // Call API to process video
+      const summaryVideoBlob = await videoSummarizationService.predictVideo(selectedFile);
+      
+      // Create URL for the summary video
+      const videoUrl = videoSummarizationService.createDownloadUrl(summaryVideoBlob);
+      
+      // Set result with video data
+      setResult({
+        title: "Tóm tắt video: " + selectedFile.name,
+        duration: "Auto-generated", // Duration will be calculated by video element
+        confidence: "AI Generated",
+        videoUrl: videoUrl,
+        videoBlob: summaryVideoBlob,
+        originalFileName: selectedFile.name
+      });
+      
+    } catch (error) {
+      console.error('Error processing video:', error);
+      setError(error.message || 'Có lỗi xảy ra khi xử lý video');
+    } finally {
+      setIsProcessing(false);
+      setShowModal(false);
+    }
+  };  const handleModalComplete = (modalResult) => {
+    // This method might not be needed anymore since we handle everything in handleProcessVideo
+    if (modalResult && modalResult.videoUrl) {
+      setResult({
+        title: "Tóm tắt video: " + selectedFile.name,
+        duration: "2:45",
+        confidence: "95%",
+        videoUrl: modalResult.videoUrl
+      });
+    }
   };
 
   const handleModalClose = () => {
-    setShowModal(false);
+    if (!isProcessing) {
+      setShowModal(false);
+    }
   };
-  const handleReset = () => {
+
+  const handleDownload = () => {
+    if (result && result.videoBlob) {
+      const fileName = `summary_${result.originalFileName || 'video'}.mp4`;
+      videoSummarizationService.downloadVideo(result.videoBlob, fileName);
+    }
+  };  const handleReset = () => {
+    // Clean up video URL to prevent memory leaks
+    if (result && result.videoUrl) {
+      URL.revokeObjectURL(result.videoUrl);
+    }
+    
     setSelectedFile(null);
     setResult(null);
     setShowModal(false);
+    setError(null);
+    setIsProcessing(false);
   };
 
   return (
@@ -82,6 +123,17 @@ function PredictPage() {
           <h1>📹 Tóm tắt Video</h1>
           <p>Tải lên video và nhận bản tóm tắt chi tiết từ AI</p>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="error-section">
+            <div className="error-message">
+              <span className="error-icon">⚠️</span>
+              <span>{error}</span>
+            </div>
+            <button className="error-close" onClick={() => setError(null)}>✕</button>
+          </div>
+        )}
 
         {/* Upload Section */}
         {!selectedFile && !result && (
@@ -117,17 +169,24 @@ function PredictPage() {
         {selectedFile && !result && (
           <div className="file-selected">
             <div className="file-info">
-              <div className="file-icon">📁</div>
-              <div className="file-details">
+              <div className="file-icon">📁</div>              <div className="file-details">
                 <h3>{selectedFile.name}</h3>
-                <p>Kích thước: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                <p>Kích thước: {videoSummarizationService.formatFileSize(selectedFile.size)}</p>
                 <p>Loại: {selectedFile.type}</p>
               </div>
             </div>            <div className="action-buttons">
-              <button className="process-btn" onClick={handleProcessVideo}>
-                🚀 Tóm tắt Video
+              <button 
+                className="process-btn" 
+                onClick={handleProcessVideo}
+                disabled={isProcessing}
+              >
+                {isProcessing ? '⏳ Đang xử lý...' : '🚀 Tóm tắt Video'}
               </button>
-              <button className="reset-btn" onClick={handleReset}>
+              <button 
+                className="reset-btn" 
+                onClick={handleReset}
+                disabled={isProcessing}
+              >
                 🔄 Chọn lại
               </button>
             </div>
@@ -142,10 +201,9 @@ function PredictPage() {
                 <span className="confidence">🎯 Độ tin cậy: {result.confidence}</span>
               </div>
             </div>            <div className="result-content">
-              {/* Video Preview */}              <div className="video-preview-card">
-                <div className="video-header">
+              {/* Video Preview */}              <div className="video-preview-card">                <div className="video-header">
                   <h3>🎬 Video tóm tắt</h3>
-                  <button className="download-btn">
+                  <button className="download-btn" onClick={handleDownload}>
                     <span>💾</span>
                   </button>
                 </div>
@@ -166,13 +224,12 @@ function PredictPage() {
               </button>
             </div>
           </div>
-        )}
-
-        {/* Prediction Modal */}
+        )}        {/* Prediction Modal */}
         <PredictionModal
           isOpen={showModal}
           onClose={handleModalClose}
           fileName={selectedFile?.name || ''}
+          isProcessing={isProcessing}
           onComplete={handleModalComplete}
         />
       </div>
