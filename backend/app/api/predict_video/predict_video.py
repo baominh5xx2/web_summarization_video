@@ -15,10 +15,9 @@ class VideoSummarizationService:
     """Service class để xử lý video summarization"""
     
     def __init__(self):
-        self.TARGET_FPS = 25
+        self.TARGET_FPS = 2
         self.MODEL_CHECKPOINT = "api/predict_video/model/checkpoints/dr-dsn-summe.pth.tar"
         self.MODEL_SCRIPT = "api/predict_video/model/summarize_mp4.py"
-        self.SUMMARY_OUTPUT_DIR = "api/predict_video/model/summary_out"
         
     async def process_video_data(self, video_data: bytes) -> str:
         """
@@ -28,7 +27,7 @@ class VideoSummarizationService:
             video_data: Raw video bytes data
             
         Returns:
-            str: Đường dẫn đến video summary
+            str: Đường dẫn đến video summary tạm thời
         """
         # Generate unique ID for this request
         request_id = str(uuid.uuid4())
@@ -59,11 +58,8 @@ class VideoSummarizationService:
             if not summary_video_path or not os.path.exists(summary_video_path):
                 raise Exception("Không thể tạo video summary")
             
-            # Step 4: Copy summary video to permanent location with unique name
-            final_summary_path = await self._save_summary_video(summary_video_path, request_id)
-            
-            logger.info(f"Summary video saved permanently: {final_summary_path}")
-            return final_summary_path
+            logger.info(f"Summary video created: {summary_video_path}")
+            return summary_video_path
             
         except Exception as e:
             # Cleanup on error
@@ -232,43 +228,6 @@ class VideoSummarizationService:
             logger.error(f"Error finding summary video: {str(e)}")
             raise
 
-    async def _save_summary_video(self, temp_summary_path: str, request_id: str) -> str:
-        """
-        Lưu video summary vào thư mục cố định với tên file độc nhất
-        
-        Args:
-            temp_summary_path: Đường dẫn video summary tạm thời
-            request_id: ID unique của request
-            
-        Returns:
-            str: Đường dẫn đến file video summary đã lưu
-        """
-        try:
-            # Create summary output directory if not exists
-            os.makedirs(self.SUMMARY_OUTPUT_DIR, exist_ok=True)
-            
-            # Generate unique filename with timestamp and request ID
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            
-            # Create unique filename: summary_YYYYMMDD_HHMMSS_requestID.mp4
-            final_filename = f"summary_{timestamp}_{request_id[:8]}.mp4"
-            final_path = os.path.join(self.SUMMARY_OUTPUT_DIR, final_filename)
-            
-            # Copy the summary video to permanent location
-            shutil.copy2(temp_summary_path, final_path)
-            
-            logger.info(f"Summary video copied to permanent location: {final_path}")
-            
-            # Verify the file was copied successfully
-            if not os.path.exists(final_path):
-                raise Exception("Failed to copy summary video to permanent location")
-            
-            return final_path
-            
-        except Exception as e:
-            logger.error(f"Error saving summary video: {str(e)}")
-            raise
-
     async def get_status(self) -> dict:
         """
         Lấy trạng thái của service
@@ -281,8 +240,6 @@ class VideoSummarizationService:
             "service": "video-summarization",
             "model_available": os.path.exists(self.MODEL_CHECKPOINT),
             "script_available": os.path.exists(self.MODEL_SCRIPT),
-            "summary_output_dir": self.SUMMARY_OUTPUT_DIR,
-            "summary_dir_exists": os.path.exists(self.SUMMARY_OUTPUT_DIR),
             "target_fps": self.TARGET_FPS,
             "supported_formats": ["mp4", "avi", "mov", "mkv"]
         }

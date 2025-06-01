@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Video Player</title>
+</head>
+<body>
+    <h1>Test Video Player</h1>
+    <video controls width="640" height="480">
+        <source src="http://localhost:8000/api/download-video/summary_20250601_091848_93cec245.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    
+    <br><br>
+    <button onclick="testVideoAPI()">Test API</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testVideoAPI() {
+            try {
+                const response = await fetch('http://localhost:8000/api/list-videos');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+                console.log('API Response:', data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chrome Video Test</title>
+</head>
+<body>
+    <h1>Chrome Video Compatibility Test</h1>
+    
+    <h2>Test 1: Basic Video Element</h2>
+    <video controls width="400" preload="none">
+        <source src="http://localhost:8000/api/videos/summary_20250601_131205_149f7522.mp4" type="video/mp4">
+        Browser không hỗ trợ video
+    </video>
+    
+    <h2>Test 2: With Different Attributes</h2>
+    <video controls width="400" preload="metadata" muted>
+        <source src="http://localhost:8000/api/videos/summary_20250601_131205_149f7522.mp4" type="video/mp4">
+        Browser không hỗ trợ video
+    </video>
+    
+    <h2>Test 3: Different Video File</h2>
+    <video controls width="400" preload="metadata" muted>
+        <source src="http://localhost:8000/api/videos/summary_20250601_091848_93cec245.mp4" type="video/mp4">
+        Browser không hỗ trợ video
+    </video>
+    
+    <h2>Test 4: Manual Load</h2>
+    <video id="manualVideo" controls width="400" preload="none"></video>
+    <br>
+    <button onclick="loadManually()">Load Video Manually</button>
+    
+    <h2>Test 5: Blob URL</h2>
+    <video id="blobVideo" controls width="400"></video>
+    <br>
+    <button onclick="loadAsBlob()">Load as Blob</button>
+    
+    <div id="status"></div>
+
+    <script>
+        function loadManually() {
+            const video = document.getElementById('manualVideo');
+            video.src = 'http://localhost:8000/api/videos/summary_20250601_131205_149f7522.mp4';
+            video.load(); // Force reload
+        }
+        
+        async function loadAsBlob() {
+            const statusDiv = document.getElementById('status');
+            const video = document.getElementById('blobVideo');
+            
+            try {
+                statusDiv.innerHTML = 'Loading blob...';
+                
+                const response = await fetch('http://localhost:8000/api/videos/summary_20250601_131205_149f7522.mp4');
+                const blob = await response.blob();
+                
+                // Create blob URL with explicit type
+                const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'video/mp4' }));
+                
+                video.src = blobUrl;
+                video.load();
+                
+                statusDiv.innerHTML = `Blob loaded: ${blob.size} bytes, type: ${blob.type}`;
+                
+            } catch (error) {
+                statusDiv.innerHTML = 'Error: ' + error.message;
+                console.error(error);
+            }
+        }
+        
+        // Add error listeners to all videos
+        document.querySelectorAll('video').forEach((video, index) => {
+            video.addEventListener('error', (e) => {
+                console.error(`Video ${index + 1} error:`, e.target.error);
+                const errorDiv = document.createElement('div');
+                errorDiv.style.color = 'red';
+                errorDiv.innerHTML = `Video ${index + 1} Error: ${e.target.error?.message || 'Unknown error'}`;
+                video.parentNode.appendChild(errorDiv);
+            });
+            
+            video.addEventListener('loadeddata', () => {
+                console.log(`Video ${index + 1} loaded successfully`);
+                const successDiv = document.createElement('div');
+                successDiv.style.color = 'green';
+                successDiv.innerHTML = `Video ${index + 1} ✓ Loaded successfully`;
+                video.parentNode.appendChild(successDiv);
+            });
+        });
+    </script>
+</body>
+</html>
