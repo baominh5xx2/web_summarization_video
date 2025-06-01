@@ -38,21 +38,25 @@ class VideoSummarizationService {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            // Parse the JSON response from the server
-            const responseData = await response.json();
-            console.log('Received JSON response from server:', responseData);
+            // API trả về trực tiếp video file (binary data), không phải JSON
+            const videoBlob = await response.blob();
+            console.log('Received video blob from server:', videoBlob);
+            console.log('Video blob size:', videoBlob.size, 'bytes');
+            console.log('Video blob type:', videoBlob.type);
 
-            // The backend now returns a JSON object with video_url and video_filename
-            // Example: { video_filename: "summary_xyz.mp4", video_url: "/api/download-video/summary_xyz.mp4" }
-            if (!responseData.video_url || !responseData.video_filename) {
-                throw new Error('Invalid response from server: missing video_url or video_filename.');
-            }
+            // Tạo filename cho video summary
+            const timestamp = Date.now();
+            const filename = `summary_${timestamp}.mp4`;
             
-            return responseData; // Return the JSON object directly
+            return {
+                videoBlob: videoBlob,
+                filename: filename,
+                originalFileName: videoFile.name,
+                status: 'success'
+            };
 
         } catch (error) {
             console.error('Error predicting video:', error);
@@ -184,6 +188,36 @@ class VideoSummarizationService {
         }
 
         return result;
+    }
+
+    /**
+     * Lấy video đã được transcode sang H.264 cho Chrome
+     * @param {string} filename - Tên file video
+     * @returns {Promise<Blob>} - Video blob đã được transcode
+     */
+    async getTranscodedVideo(filename) {
+        try {
+            console.log(`Fetching transcoded video: ${filename}`);
+            
+            const response = await fetch(`${API_BASE_URL}/videos-transcoded/${filename}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'video/mp4'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch transcoded video: ${response.status} ${response.statusText}`);
+            }
+
+            const videoBlob = await response.blob();
+            console.log(`Successfully received transcoded video blob: ${videoBlob.size} bytes`);
+            
+            return videoBlob;
+        } catch (error) {
+            console.error('Error fetching transcoded video:', error);
+            throw new Error(`Lỗi lấy video đã transcode: ${error.message}`);
+        }
     }
 }
 

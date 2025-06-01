@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blob URL Video Test</title>
+</head>
+<body>
+    <h1>Blob URL Video Test</h1>
+    
+    <button onclick="loadVideoAsBlob()" id="loadBtn">Load Video as Blob</button>
+    <button onclick="testDirectURL()" id="directBtn">Test Direct URL</button>
+    <div id="status"></div>
+    
+    <br><br>
+    <video id="testVideo" controls width="400" style="display: none;">
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        async function testDirectURL() {
+            const statusDiv = document.getElementById('status');
+            const video = document.getElementById('testVideo');
+            
+            statusDiv.innerHTML = 'Testing direct URL...';
+            
+            // Test trực tiếp URL với video khác
+            const directUrl = 'http://localhost:8000/api/videos/summary_20250601_131205_149f7522.mp4';
+            video.src = directUrl;
+            video.style.display = 'block';
+            
+            statusDiv.innerHTML = `Testing direct URL: ${directUrl}`;
+        }
+
+        async function loadVideoAsBlob() {
+            const statusDiv = document.getElementById('status');
+            const video = document.getElementById('testVideo');
+            const loadBtn = document.getElementById('loadBtn');
+            
+            try {
+                statusDiv.innerHTML = 'Loading video...';
+                loadBtn.disabled = true;
+                
+                // Thử video khác
+                const response = await fetch('http://localhost:8000/api/videos/summary_20250601_131205_149f7522.mp4');
+                console.log('Response:', response);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                statusDiv.innerHTML = 'Converting to blob...';
+                
+                // Chuyển thành blob
+                const videoBlob = await response.blob();
+                console.log('Video blob:', videoBlob);
+                console.log('Video blob size:', videoBlob.size);
+                console.log('Video blob type:', videoBlob.type);
+                
+                // Tạo blob URL
+                const blobUrl = URL.createObjectURL(videoBlob);
+                console.log('Blob URL:', blobUrl);
+                
+                // Set video source
+                video.src = blobUrl;
+                video.style.display = 'block';
+                
+                statusDiv.innerHTML = `
+                    Video loaded successfully!<br>
+                    Size: ${videoBlob.size} bytes<br>
+                    Type: ${videoBlob.type}<br>
+                    Blob URL: ${blobUrl}
+                `;
+                
+                // Event listeners
+                video.addEventListener('loadeddata', () => {
+                    console.log('Video data loaded');
+                    statusDiv.innerHTML += '<br>✓ Video data loaded';
+                });
+                
+                video.addEventListener('canplay', () => {
+                    console.log('Video can play');
+                    statusDiv.innerHTML += '<br>✓ Video can play';
+                });
+                
+                video.addEventListener('error', (e) => {
+                    console.error('Video error:', e);
+                    console.error('Video error object:', e.target.error);
+                    statusDiv.innerHTML += '<br>❌ Video error: ' + (e.target.error?.message || 'Unknown error');
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '❌ Error: ' + error.message;
+                loadBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

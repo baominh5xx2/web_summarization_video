@@ -34,7 +34,7 @@ async def root():
         "description": "API để tạo video summary sử dụng Deep Summarization Network",
         "version": "1.0.0",
         "endpoints": {
-            "POST /api/predict-video/": "Upload video để tạo summary",
+            "POST /api/predict-video/": "Upload video để tạo summary và trả về video MP4 (H.264+AAC) trực tiếp",
             "GET /api/health": "Health check",
             "GET /api/status": "API status",
             "GET /": "API information"

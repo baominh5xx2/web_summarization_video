@@ -190,11 +190,10 @@ function History() {
                     </button>
                   </div>
                 </div>                {/* Video Player */}
-                <div className="video-section">
-                  <video 
+                <div className="video-section">                  <video 
                     controls 
                     className="video-player"
-                    poster={`https://via.placeholder.com/640x360/7c3aed/ffffff?text=${encodeURIComponent(item.fileName)}`}
+                    poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQwIiBoZWlnaHQ9IjM2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjN2MzYWVkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5WaWRlbyBQbGFjZWhvbGRlcjwvdGV4dD48L3N2Zz4="
                   >
                     <source src={item.videoUrl} type="video/mp4" />
                     Trình duyệt của bạn không hỗ trợ video player.
