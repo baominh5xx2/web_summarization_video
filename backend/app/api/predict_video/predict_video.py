@@ -167,6 +167,7 @@ class VideoSummarizationService:
     async def _save_to_history(self, summary_video_path: str) -> str:
         """
         Lưu video summary vào thư mục history với tên file có timestamp
+        Transcoding video thành MP4 (H.264 + AAC) format trước khi lưu
         
         Args:
             summary_video_path: Đường dẫn video summary tạm thời
@@ -181,13 +182,13 @@ class VideoSummarizationService:
             history_filename = f"summary_{timestamp}_{unique_id}.mp4"
             history_video_path = os.path.join(self.HISTORY_DIR, history_filename)
             
-            # Copy video từ temp sang history
-            shutil.copy2(summary_video_path, history_video_path)
+            # Transcode video thành MP4 (H.264 + AAC) format trước khi lưu
+            await self._transcode_to_standard_format(summary_video_path, history_video_path)
             
             # Cleanup old videos - chỉ giữ lại 10 video gần nhất
             await self._cleanup_old_videos()
             
-            logger.info(f"Video saved to history: {history_video_path}")
+            logger.info(f"Video transcoded and saved to history: {history_video_path}")
             return history_video_path
             
         except Exception as e:
@@ -298,3 +299,74 @@ class VideoSummarizationService:
             "script_available": os.path.exists(self.MODEL_SCRIPT),
             "supported_formats": ["mp4", "avi", "mov", "mkv"]
         }
+
+    async def _transcode_to_standard_format(self, input_path: str, output_path: str):
+        """
+        Transcode video thành MP4 (H.264 + AAC) format
+        
+        Args:
+            input_path: Đường dẫn video đầu vào
+            output_path: Đường dẫn video đầu ra
+        """
+        try:
+            # Kiểm tra file đầu vào có tồn tại không
+            if not os.path.exists(input_path):
+                raise Exception(f"Input video file not found: {input_path}")
+            
+            # Tạo thư mục chứa file đầu ra nếu chưa tồn tại
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            # Command để transcode video với FFmpeg
+            # Sử dụng libx264 encoder và aac encoder với quality settings tối ưu
+            cmd = [
+                'ffmpeg',
+                '-i', input_path,
+                '-c:v', 'libx264',           # Video codec: H.264
+                '-crf', '23',                # Quality factor (18-28, 23 is good balance)
+                '-preset', 'medium',         # Encoding speed vs compression efficiency
+                '-c:a', 'aac',               # Audio codec: AAC
+                '-b:a', '128k',              # Audio bitrate
+                '-movflags', '+faststart',   # Optimize for web streaming
+                '-y',                        # Overwrite output file if exists
+                output_path
+            ]
+            
+            logger.info(f"Transcoding video: {input_path} -> {output_path}")
+            logger.info(f"FFmpeg command: {' '.join(cmd)}")
+            
+            # Chạy FFmpeg command
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            # Kiểm tra file đầu ra có được tạo thành công không
+            if not os.path.exists(output_path):
+                raise Exception("Transcoded video file was not created")
+            
+            # Kiểm tra kích thước file
+            output_size = os.path.getsize(output_path)
+            if output_size == 0:
+                raise Exception("Transcoded video file is empty")
+            
+            logger.info(f"Video transcoded successfully: {output_path} ({output_size} bytes)")
+            
+        except subprocess.CalledProcessError as e:
+            logger.error(f"FFmpeg transcoding failed: {e.stderr}")
+            # Fallback: copy file nếu transcoding thất bại
+            try:
+                shutil.copy2(input_path, output_path)
+                logger.warning(f"Fallback: copied original file to {output_path}")
+            except Exception as copy_error:
+                raise Exception(f"Both transcoding and fallback copy failed: {str(copy_error)}")
+            
+        except Exception as e:
+            logger.error(f"Error during transcoding: {str(e)}")
+            # Fallback: copy file nếu có lỗi bất kỳ
+            try:
+                shutil.copy2(input_path, output_path)
+                logger.warning(f"Fallback: copied original file to {output_path}")
+            except Exception as copy_error:
+                raise Exception(f"Both transcoding and fallback copy failed: {str(copy_error)}")

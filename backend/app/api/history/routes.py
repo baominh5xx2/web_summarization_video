@@ -171,24 +171,21 @@ async def _transcode_and_stream_video(video_path: str) -> StreamingResponse:
         logger.error(f"Error transcoding and streaming video: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error during video processing")
 
-@router.get("/history/videos", response_class=StreamingResponse)
-async def get_recent_videos(limit: int = Query(default=1, ge=1, le=10)):
+@router.get("/history/videos/latest", response_class=StreamingResponse)
+async def get_latest_video():
     """
-    Trả về video summary gần nhất dưới dạng binary (MP4 - H.264 + AAC)
+    Trả về video summary mới nhất dưới dạng binary (MP4 - H.264 + AAC)
     
-    Args:
-        limit: Index của video (1=mới nhất, 2=thứ 2, etc.) - mặc định 1
-        
     Returns:
         StreamingResponse: Video binary MP4 (H.264 + AAC)
     """
     try:
-        videos = await history_service.get_recent_videos(limit)
+        videos = await history_service.get_recent_videos(1)
         
         if not videos:
             raise HTTPException(status_code=404, detail="Không có video nào trong history")
         
-        # Lấy video đầu tiên (mới nhất)
+        # Lấy video mới nhất
         latest_video = videos[0]
         filepath = latest_video["filepath"]
         
@@ -201,7 +198,49 @@ async def get_recent_videos(limit: int = Query(default=1, ge=1, le=10)):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in get_recent_videos: {str(e)}")
+        logger.error(f"Error in get_latest_video: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Lỗi lấy video: {str(e)}")
+
+@router.get("/history/videos/{video_index:int}", response_class=StreamingResponse)
+async def get_video_by_index(video_index: int):
+    """
+    Trả về video summary theo thứ tự dưới dạng binary (MP4 - H.264 + AAC)
+    
+    Args:
+        video_index: Index của video (1=mới nhất, 2=thứ 2, etc.)
+        
+    Returns:
+        StreamingResponse: Video binary MP4 (H.264 + AAC)
+    """
+    try:
+        # Validate video_index
+        if video_index < 1:
+            raise HTTPException(status_code=400, detail="Video index phải >= 1")
+        
+        # Lấy tất cả video để có thể truy cập theo index
+        videos = await history_service.get_recent_videos(50)  # Lấy tối đa 50 video
+        
+        if not videos:
+            raise HTTPException(status_code=404, detail="Không có video nào trong history")
+        
+        # Kiểm tra index có hợp lệ không
+        if video_index > len(videos):
+            raise HTTPException(status_code=404, detail=f"Video index {video_index} không tồn tại. Chỉ có {len(videos)} video.")
+        
+        # Lấy video theo index (index-1 vì array bắt đầu từ 0)
+        target_video = videos[video_index - 1]
+        filepath = target_video["filepath"]
+        
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail="Video file không tồn tại")
+        
+        # Transcode video to H.264 + AAC format and stream back
+        return await _transcode_and_stream_video(filepath)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_video_by_index: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Lỗi lấy video: {str(e)}")
 
 @router.get("/history/list")
@@ -277,10 +316,10 @@ async def get_recent_videos_with_data(limit: int = Query(default=3, ge=1, le=10)
         logger.error(f"Error in get_recent_videos_with_data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/history/videos/{video_id}/stream")
+@router.get("/history/videos/id/{video_id}/stream")
 async def stream_video(video_id: str):
     """
-    Stream video trực tiếp cho frontend
+    Stream video trực tiếp cho frontend bằng video ID
     Format: MP4 (H.264 + AAC)
     
     Args:
@@ -305,10 +344,10 @@ async def stream_video(video_id: str):
         logger.error(f"Error in stream_video: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Lỗi stream video: {str(e)}")
 
-@router.get("/history/videos/{video_id}")
-async def get_video_info(video_id: str):
+@router.get("/history/videos/id/{video_id}")
+async def get_video_info_by_id(video_id: str):
     """
-    Lấy thông tin chi tiết của một video
+    Lấy thông tin chi tiết của một video bằng ID
     
     Args:
         video_id: ID của video
@@ -323,13 +362,13 @@ async def get_video_info(video_id: str):
             "video": video_info
         }
     except Exception as e:
-        logger.error(f"Error in get_video_info: {str(e)}")
-        raise
+        logger.error(f"Error in get_video_info_by_id: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/history/videos/{video_id}/download")
+@router.get("/history/videos/id/{video_id}/download")
 async def download_video(video_id: str):
     """
-    Download video từ history
+    Download video từ history bằng ID
     
     Args:
         video_id: ID của video cần download
@@ -360,7 +399,7 @@ async def download_video(video_id: str):
         logger.error(f"Error in download_video: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Lỗi download video: {str(e)}")
 
-@router.delete("/history/videos/{video_id}")
+@router.delete("/history/videos/id/{video_id}")
 async def delete_video(video_id: str):
     """
     Xóa video khỏi history
