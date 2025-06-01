@@ -204,6 +204,29 @@ async def get_recent_videos(limit: int = Query(default=1, ge=1, le=10)):
         logger.error(f"Error in get_recent_videos: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Lỗi lấy video: {str(e)}")
 
+@router.get("/history/list")
+async def get_video_list(limit: int = Query(default=10, ge=1, le=50)):
+    """
+    Lấy danh sách video summary (JSON) để xem có bao nhiêu video
+    
+    Args:
+        limit: Số lượng video tối đa (1-50, mặc định 10)
+        
+    Returns:
+        dict: Danh sách video với metadata
+    """
+    try:
+        videos = await history_service.get_recent_videos(limit)
+        return {
+            "success": True,
+            "count": len(videos),
+            "limit": limit,
+            "videos": videos
+        }
+    except Exception as e:
+        logger.error(f"Error in get_video_list: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/history/videos-with-data")
 async def get_recent_videos_with_data(limit: int = Query(default=3, ge=1, le=10)):
     """
